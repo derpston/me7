@@ -33,8 +33,7 @@ import time
 import logging
 
 # 3rd party
-# This may need to be installed separately
-from pylibftdi import Device, BitBangDevice
+import pylibftdi 
 
 logger = logging.getLogger(__name__)
 
@@ -42,12 +41,12 @@ logger = logging.getLogger(__name__)
 class ECU:
 
     def __init__(self):
-        self.ser = Device(mode='b', lazy_open=True)
+        self.ser = pylibftdi.Device(mode='b', lazy_open=True)
 
     def bbang(self, bba):
         # Take the one-byte address to "bit bang" and bang the port
         self.bba = bba
-        self.bbser = BitBangDevice()
+        self.bbser = pylibftdi.BitBangDevice()
         self.bbser.open()
         self.bbser.direction = 0x01
         self.bbser.port = 1
