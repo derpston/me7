@@ -159,10 +159,10 @@ class ECU:
         csum = self.checksum(self.sendlist)
         self.sendlist = self.sendlist + [csum]
         self.send(self.sendlist)
-        cmdval = self.commandvalidate(self.sendlist)
+        cmdval = self._validateCommand(self.sendlist)
         return cmdval
 
-    def commandvalidate(self, command):
+    def _validateCommand(self, command):
         # Every KWP command is echoed back.  This clears out these bytes.
         self.command = command
         cv = True
