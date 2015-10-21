@@ -30,11 +30,12 @@ trichard3000
 # stdenv
 from __future__ import print_function, division
 import time
+import logging
 
 # 3rd party
 from pylibftdi import Device, BitBangDevice  # This may need to be installed separately
 
-debug = 0   
+logger = logging.getLogger(__name__)
 
 class ECU:
 
@@ -181,31 +182,29 @@ class ECU:
 
    def getresponse(self):
       # gets a properly formated KWP response from a command and returns the data. 
-      debugneeds = 4
       numbytes = 0
       while numbytes == 0:     # This is a hack because sometimes responses have leading 0x00's.  Why?  This removes them.
          numbytes = ord(self.recv(1))
       gr = [ numbytes ]
-      if debug >= debugneeds: print("Get bytes: " + hex(numbytes))
+      logger.debug("Get bytes: " + hex(numbytes))
       for i in range(numbytes):
          recvdata = ord(self.recv(1))
-         if debug >= debugneeds: print("Get byte" + str(i) + ": " + hex(recvdata))
+         logger.debug("Get byte" + str(i) + ": " + hex(recvdata))
          gr = gr + [ recvdata ]
       checkbyte = self.recv(1)
-      if debug >= debugneeds: print(gr)
-      if debug >= debugneeds: print("GR: " + hex(ord(checkbyte)) + "<-->" + hex(self.checksum(gr))) 
+      logger.debug(gr)
+      logger.debug("GR: " + hex(ord(checkbyte)) + "<-->" + hex(self.checksum(gr))) 
       return (gr + [ ord(checkbyte) ])
 
    def readecuid(self, paramdef):      
       # KWP2000 command to pull the ECU ID
       self.paramdef = paramdef
-      debugneeds = 4
       reqserviceid = [ 0x1A ]
       sendlist = reqserviceid + self.paramdef
-      if debug >= debugneeds: print( sendlist )
+      logger.debug(sendlist)
       self.sendcommand(sendlist)
       response = self.getresponse()
-      if debug >= debugneeds: print(response)
+      logger.debug(response)
       return response
 
    def stopcomm(self):
@@ -253,26 +252,24 @@ class ECU:
    
    def readmembyaddr(self, readvals):
       # Function to read an area of ECU memory.
-      debugneeds = 4
       self.readvals = readvals
       rdmembyaddr = [ 0x23 ]
       sendlist = rdmembyaddr + self.readvals
-      if debug >= debugneeds: print("readmembyaddr() sendlist: " + sendlist)
+      logger.debug("readmembyaddr() sendlist: " + sendlist)
       self.sendcommand(sendlist)
       response = self.getresponse()
-      if debug >= debugneeds: print("readmembyaddr() response: " + response)
+      logger.debug("readmembyaddr() response: " + response)
       return response
 
    def writemembyaddr(self, writevals):
       # Function to write to an area of ECU memory.
-      debugneeds = 4
       self.writevals = writevals
       wrmembyaddr = [ 0x3D ]
       sendlist = wrmembyaddr + self.writevals
-      if debug >= debugneeds: print("writemembyaddr() sendlist: " + sendlist)
+      logger.debug("writemembyaddr() sendlist: " + sendlist)
       self.sendcommand(sendlist)
       response = self.getresponse()
-      if debug >= debugneeds: print("writemembyaddr() response: " + response)
+      logger.debug("writemembyaddr() response: " + response)
       return response
 
    def testerpresent(self):
