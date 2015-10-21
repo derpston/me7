@@ -27,8 +27,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 trichard3000
 '''
 
+# stdenv
 from __future__ import print_function, division
-import sys, time, argparse
+import time
+
+# 3rd party
 from pylibftdi import Device, BitBangDevice  # This may need to be installed separately
 
 debug = 0   
@@ -48,9 +51,6 @@ class ECU:
       self.bbser.port = 1
       time.sleep(.5)
       self.bbser.port = 0
-      outstr = "><"
-      sys.stdout.write('\r' + outstr)
-      sys.stdout.flush()
       time.sleep(.2)
       bbbitmask = 1
       for i in range(8):
@@ -59,13 +59,9 @@ class ECU:
          else:
             outbit = 0   
          self.bbser.port = outbit
-         outstr = ">" + str(outbit) + outstr[1:] 
-         sys.stdout.write('\r' + outstr)
-         sys.stdout.flush()
          bbbitmask = bbbitmask * 2
          time.sleep(.2)
       self.bbser.port = 1
-      sys.stdout.write("\n")
       self.bbser.close()
 
    def initialize(self, connect):
@@ -310,18 +306,3 @@ class ECU:
       self.dumpstring = dumpstring
       for i in range(len(self.dumpstring)/2):
          self.send([ int('0x'+self.dumpstring[i*2:(i*2)+2],16) ])
-
-
-
-def main():
-   print("Loading pylibme7")
-
-   
-if __name__ == '__main__':
-
-   try:
-     main()
-
-   except KeyboardInterrupt:
-     print("hard stop")
-
