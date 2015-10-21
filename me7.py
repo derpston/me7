@@ -37,8 +37,8 @@ import pylibftdi
 
 logger = logging.getLogger(__name__)
 
-
 class ECU:
+    connected = False
 
     def __init__(self):
         self.port = pylibftdi.Device(mode='b', lazy_open=True)
@@ -80,40 +80,45 @@ class ECU:
         port.close()
 
 
-    def initialize(self, connect):
-        self.connect = connect
-        if self.connect == "SLOW-0x11":
-            self.port.close()
-            time.sleep(.5)
+    def connect(self, method = "SLOW-0x11"):
+        """Connect to the ECU. Returns a boolean indicating success. Valid 
+        values for the `method` parameter are: "SLOW-0x11"
+        The default is SLOW-0x11"""
+        logging.debug("Attempting ECU connect with method %s" % method)
 
-            self.ecuconnect = False
-            while self.ecuconnect == False:
-                print("Attempting ECU connect: " + self.connect)
+        # If we're already connected, do nothing.
+        if self.connected:
+            return True
 
-                # Bit bang the K-line
-                bbseq = [0x11]
-                self.bitbang(bbseq)
-                self.port.open()
-                self.port.ftdi_fn.ftdi_set_line_property(8, 1, 0)
-                self.port.baudrate = 10400
-                self.port.flush()
+        if method == "SLOW-0x11":
+            # Bit bang the K-line to signal the ECU that we're connecting.
+            self.bitbang([0x11])
+    
+            # Configure the serial port.
+            self.port.open()
+            self.port.ftdi_fn.ftdi_set_line_property(8, 1, 0)
+            self.port.baudrate = 10400
+            self.port.flush()
 
-                # Wait for ECU response to bit bang
-                waithex = [0x55, 0xef, 0x8f, 1]
-                self.waitfor(waithex)
-                # Wait a bit
-                time.sleep(.026)
+            # Wait for ECU response to the bit banging wakeup call.
+            waithex = [0x55, 0xef, 0x8f, 1]
+            self.waitfor(waithex)
 
-                # Send 0x70
-                self.send([0x70])
+            # Wait a bit
+            # TODO Find out how long this needs to be and why.
+            time.sleep(.026)
 
-                # 0xee means that we're talking to the ECU
-                waithex = [0xee, 1]
-                response = self.waitfor(waithex)
-                if response[0] == True:
-                    self.ecuconnect = True
-                else:
-                    print("ECU Connect Failed.  Retrying.")
+            self.send([0x70])
+
+            # 0xee means that we're talking to the ECU
+            waithex = [0xee, 1]
+            response = self.waitfor(waithex)
+            if response[0] == True:
+                self.connected = True
+            
+            return self.connected
+        else:
+            raise RuntimeError("Unknown connection method: %s" % method)
 
     def waitfor(self, wf):
         # This was used for debugging and really is only used for the init at this point.

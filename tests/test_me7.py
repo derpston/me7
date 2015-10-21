@@ -139,20 +139,26 @@ class TestBitBang(TestCase):
         bbd_direction.assert_called_with(1)
 
 
-class TestInit(TestCase):
+class TestConnect(TestCase):
     """Connects to an ECU."""
 
     @mock.patch("pylibftdi.Device")
     def setUp(self, device):
         self.ecu = me7.ECU()
 
+    def test_bad_method(self):
+        with self.assertRaises(RuntimeError):
+            self.ecu.connect("not a valid connection method")
+
     @mock.patch("me7.ECU.bitbang")
     @mock.patch("me7.ECU.waitfor", side_effect=[[True], [True]])
     @mock.patch("time.sleep")
-    def test_init(self, sleep, waitfor, bitbang):
-        self.ecu.initialize("SLOW-0x11")
+    def test_connect(self, sleep, waitfor, bitbang):
+        returnvalue = self.ecu.connect("SLOW-0x11")
+        self.assertTrue(returnvalue)
 
         self.ecu.port.open.assert_called_once_with()
         self.ecu.port.ftdi_fn.ftdi_set_line_property.assert_called_once_with(8, 1, 0)
         self.assertEqual(self.ecu.port.baudrate, 10400)
         self.ecu.port.flush.assert_called_once_with()
+    
