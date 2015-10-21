@@ -172,14 +172,9 @@ class ECU:
                 cv = cv & False
         return cv
 
-    def checksum(self, checklist):
-        # Calculates the simple checksum for the KWP command bytes.
-        self.checklist = checklist
-        csum = 0
-        for i in self.checklist:
-            csum = csum + i
-        csum = (csum & 0xFF) % 0xFF
-        return csum
+    def checksum(self, buf):
+        """Returns an int that is the KWP2000 checksum of a list of ints."""
+        return (sum(buf) & 0xff) % 0xff
 
     def getresponse(self):
         # gets a properly formated KWP response from a command and returns the
