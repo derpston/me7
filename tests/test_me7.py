@@ -111,7 +111,7 @@ class TestBitBang(TestCase):
     @mock.patch("time.sleep")
     def test_bitbang(self, sleep, bbd_open, bbd_close, bbd_direction, bbd_port):
         test_value = 0xaa
-        self.ecu.bbang([test_value])
+        self.ecu.bitbang([test_value])
 
         port_values = [call[0][0] for call in bbd_port.call_args_list]
         sleep_values = [call[0][0] for call in sleep.call_args_list]

@@ -43,7 +43,7 @@ class ECU:
     def __init__(self):
         self.port = pylibftdi.Device(mode='b', lazy_open=True)
 
-    def bbang(self, value):
+    def bitbang(self, value):
         """Wake up the ECU and tell it we're going to start talking to it.
         We do this by bit-banging a value, with some header/footer bits,
         to the serial port manually. We're aiming for 5 baud."""
@@ -92,7 +92,7 @@ class ECU:
 
                 # Bit bang the K-line
                 bbseq = [0x11]
-                self.bbang(bbseq)
+                self.bitbang(bbseq)
                 self.port.open()
                 self.port.ftdi_fn.ftdi_set_line_property(8, 1, 0)
                 self.port.baudrate = 10400
