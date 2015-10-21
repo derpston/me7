@@ -150,17 +150,16 @@ class ECU:
                 isread = True
         return recvdata
 
-    def sendCommand(self, sendlist):
-        # Wraps raw KWP command in a length byte and a checksum byte and hands
-        # it to send()
-        self.sendlist = sendlist
-        csum = 0
-        self.sendlist = [len(self.sendlist)] + self.sendlist
-        csum = self.checksum(self.sendlist)
-        self.sendlist = self.sendlist + [csum]
-        self.send(self.sendlist)
-        cmdval = self._validateCommand(self.sendlist)
-        return cmdval
+    def sendCommand(self, buf):
+        """Wraps raw KWP command in a length byte and a checksum byte and
+        hands it to send(). Returns a boolean indicating whether
+        validateCommand was satisfied with the response from the ECU."""
+        sendbuf = [len(buf)]
+        sendbuf.extend(buf)
+        sendbuf.append(self.checksum(sendbuf))
+
+        self.send(sendbuf)
+        return self._validateCommand(sendbuf)
 
     def _validateCommand(self, command):
         # Every KWP command is echoed back.  This clears out these bytes.
