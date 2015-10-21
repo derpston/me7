@@ -1,0 +1,12 @@
+*.pyc
+*.DS_Store
+.*.swp
+*.tar.gz
+*.dsc
+*.deb
+*.changes
+*~
+venv
+.tox
+*.egg-info
+*.egg
