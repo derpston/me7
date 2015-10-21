@@ -43,27 +43,36 @@ class ECU:
     def __init__(self):
         self.port = pylibftdi.Device(mode='b', lazy_open=True)
 
-    def bbang(self, bba):
-        # Take the one-byte address to "bit bang" and bang the port
-        self.bba = bba
-        self.bbser = pylibftdi.BitBangDevice()
-        self.bbser.open()
-        self.bbser.direction = 0x01
-        self.bbser.port = 1
+    def bbang(self, value):
+        """Wake up the ECU and tell it we're going to start talking to it.
+        We do this by bit-banging a value, with some header/footer bits,
+        to the serial port manually. We're aiming for 5 baud."""
+
+        # TODO fix this stupid encapsulation
+        value = value[0]
+
+        # Set up the port.
+        port = pylibftdi.BitBangDevice()
+        port.open()
+        port.direction = 0x01
+        
+        # High for a half second.
+        port.port = 1
         time.sleep(.5)
-        self.bbser.port = 0
+
+        # Low for one bit-width
+        port.port = 0
         time.sleep(.2)
-        bbbitmask = 1
+
+        # Shift out the byte with appropriate timings.
         for i in range(8):
-            if (self.bba[0] & bbbitmask) > 0:
-                outbit = 1
-            else:
-                outbit = 0
-            self.bbser.port = outbit
-            bbbitmask = bbbitmask * 2
+            port.port = (value >> i) & 1
             time.sleep(.2)
-        self.bbser.port = 1
-        self.bbser.close()
+
+        # High, and close port.
+        port.port = 1
+        port.close()
+
 
     def initialize(self, connect):
         self.connect = connect
