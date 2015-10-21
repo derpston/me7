@@ -9,4 +9,7 @@ This implements a small subset of the [KWP2000/ISO-14230](https://en.wikipedia.o
 
 Undergoing significant refactor, don't use this yet.
 
+## Known deficiencies
+
+* We require libftdi to be installed for testing because of incomplete and awkward mocking in some of the tests.
 
