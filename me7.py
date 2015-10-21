@@ -33,7 +33,7 @@ from pylibftdi import Device, BitBangDevice  # This may need to be installed sep
 
 debug = 0   
 
-class Ecu:
+class ECU:
 
    def __init__(self):
       self.ser = Device(mode='b', lazy_open=True)
