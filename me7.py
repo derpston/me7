@@ -296,10 +296,3 @@ class ECU:
         self.sendcommand(gr)
         response = self.getresponse()
         return response
-
-    def sendhexstring(self, dumpstring):
-        # Takes a list of characters as a string, turns every two characters into a hex byte and sends it raw.
-        # used as needed for dev/test/debug
-        self.dumpstring = dumpstring
-        for i in range(len(self.dumpstring) / 2):
-            self.send([int('0x' + self.dumpstring[i * 2:(i * 2) + 2], 16)])
