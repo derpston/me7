@@ -1,6 +1,7 @@
 from unittest import TestCase
 import mock
 import me7
+import StringIO
 
 
 class TestECUExists(TestCase):
@@ -56,7 +57,7 @@ class TestSendCommand(TestCase):
 
     @mock.patch("me7.ECU._validateCommand", return_value = True)
     @mock.patch("me7.ECU.checksum", return_value = 0x00)
-    def test_commandValidate(self, checksum, validate):
+    def test_sendCommand(self, checksum, validate):
         with mock.patch("me7.ECU.send") as send:
             self.assertTrue(self.ecu.sendCommand([0x00]))
             send.assert_called_once_with([1, 0, 0])
@@ -75,3 +76,20 @@ class TestSendCommand(TestCase):
             self.assertTrue(self.ecu.sendCommand([0x01, 0x01, 0x01]))
             send.assert_called_once_with([3, 1, 1, 1, 0])
 
+
+class TestSend(TestCase):
+    """Sends some bytes out the serial port."""
+
+    def setUp(self):
+        with mock.patch("pylibftdi.Device"):
+            self.ecu = me7.ECU()
+
+    def test_send(self):
+        # The port should be a file-like object.
+        self.ecu.port = StringIO.StringIO()
+        self.ecu.send([0x00])
+        self.assertEqual("\x00", self.ecu.port.getvalue())
+        
+        self.ecu.port = StringIO.StringIO()
+        self.ecu.send([0x00, 0x01, 0xff])
+        self.assertEqual("\x00\x01\xff", self.ecu.port.getvalue())
