@@ -150,7 +150,7 @@ class ECU:
                 isread = True
         return recvdata
 
-    def sendcommand(self, sendlist):
+    def sendCommand(self, sendlist):
         # Wraps raw KWP command in a length byte and a checksum byte and hands
         # it to send()
         self.sendlist = sendlist
@@ -202,7 +202,7 @@ class ECU:
         reqserviceid = [0x1A]
         sendlist = reqserviceid + self.paramdef
         logger.debug(sendlist)
-        self.sendcommand(sendlist)
+        self.sendCommand(sendlist)
         response = self.getresponse()
         logger.debug(response)
         return response
@@ -210,7 +210,7 @@ class ECU:
     def stopcomm(self):
         # KWP2000 command to tell the ECU that the communications is finished
         stopcommunication = [0x82]
-        self.sendcommand(stopcommunication)
+        self.sendCommand(stopcommunication)
         response = self.getresponse()
         return response
 
@@ -234,7 +234,7 @@ class ECU:
     #   if self.bps == 125000:
     #      bpsout = [ 0x?? ]
         sendlist = startdiagnosticsession + setbaud + bpsout
-        self.sendcommand(sendlist)
+        self.sendCommand(sendlist)
         response = self.getresponse()
         self.port.baudrate = self.bps
         time.sleep(1)
@@ -246,7 +246,7 @@ class ECU:
         accesstiming_setval = [0x083, 0x03]
         accesstiming = accesstiming_setval + self.params
         sendlist = accesstiming
-        self.sendcommand(sendlist)
+        self.sendCommand(sendlist)
         response = self.getresponse()
         return response
 
@@ -256,7 +256,7 @@ class ECU:
         rdmembyaddr = [0x23]
         sendlist = rdmembyaddr + self.readvals
         logger.debug("readmembyaddr() sendlist: " + sendlist)
-        self.sendcommand(sendlist)
+        self.sendCommand(sendlist)
         response = self.getresponse()
         logger.debug("readmembyaddr() response: " + response)
         return response
@@ -267,7 +267,7 @@ class ECU:
         wrmembyaddr = [0x3D]
         sendlist = wrmembyaddr + self.writevals
         logger.debug("writemembyaddr() sendlist: " + sendlist)
-        self.sendcommand(sendlist)
+        self.sendCommand(sendlist)
         response = self.getresponse()
         logger.debug("writemembyaddr() response: " + response)
         return response
@@ -275,7 +275,7 @@ class ECU:
     def testerpresent(self):
         # KWP2000 TesterPresent command
         tp = [0x3E]
-        self.sendcommand(tp)
+        self.sendCommand(tp)
         response = self.getresponse()
         return response
 
@@ -286,13 +286,13 @@ class ECU:
         sendlist = [0xb7]                           # is 0xB7 the "locator?"
         sendlist = sendlist + [0x03]           # Number of bytes per field ?
         sendlist = sendlist + self.logline
-        self.sendcommand(sendlist)
+        self.sendCommand(sendlist)
         response = self.getresponse()
         return response
 
     def getlogrecord(self):
         # Command to request a logging record
         gr = [0xb7]
-        self.sendcommand(gr)
+        self.sendCommand(gr)
         response = self.getresponse()
         return response
