@@ -80,7 +80,7 @@ class ECU:
         port.close()
 
 
-    def connect(self, method = "SLOW-0x11"):
+    def open(self, method = "SLOW-0x11"):
         """Connect to the ECU. Returns a boolean indicating success. Valid 
         values for the `method` parameter are: "SLOW-0x11"
         The default is SLOW-0x11"""
@@ -224,7 +224,7 @@ class ECU:
         logger.debug(response)
         return response
 
-    def stopcomm(self):
+    def close(self):
         # KWP2000 command to tell the ECU that the communications is finished
         stopcommunication = [0x82]
         self.sendCommand(stopcommunication)
