@@ -93,3 +93,46 @@ class TestSend(TestCase):
         self.ecu.port = StringIO.StringIO()
         self.ecu.send([0x00, 0x01, 0xff])
         self.assertEqual("\x00\x01\xff", self.ecu.port.getvalue())
+
+
+class TestBitBang(TestCase):
+    """Manually sends (bitbangs) a byte out of the serial port at a specified
+    and very slow baud rate. This has the effect of signalling to the ECU that
+    we'd like to communicate with it."""
+
+    @mock.patch("pylibftdi.Device")
+    def setUp(self, device):
+        self.ecu = me7.ECU()
+
+    @mock.patch("pylibftdi.BitBangDevice.port", new_callable=mock.PropertyMock)
+    @mock.patch("pylibftdi.BitBangDevice.direction", new_callable=mock.PropertyMock)
+    @mock.patch("pylibftdi.BitBangDevice.close")
+    @mock.patch("pylibftdi.BitBangDevice.open")
+    @mock.patch("time.sleep")
+    def test_bitbang(self, sleep, bbd_open, bbd_close, bbd_direction, bbd_port):
+        test_value = 0xaa
+        self.ecu.bbang([test_value])
+
+        port_values = [call[0][0] for call in bbd_port.call_args_list]
+        sleep_values = [call[0][0] for call in sleep.call_args_list]
+
+        # Starts with high, then low, and ends high.
+        self.assertEqual(port_values[0], 1)
+        self.assertEqual(port_values[1], 0)
+        self.assertEqual(port_values[-1], 1)
+
+        value_bits = port_values[2:-1]
+        reconstructed_value = int("0b" + "".join(map(lambda b: str(b), value_bits)), 2)
+        # Invert reconstructed value, we're supposed to transmit the inverse.
+        reconstructed_value ^= 0xff
+        self.assertEqual(test_value, reconstructed_value)
+
+        # Check the bit timings. Half second to start, 0.2s between each bit.
+        self.assertEqual(sleep_values[0], 0.5)
+        for value in sleep_values[2:]:
+            self.assertEqual(value, 0.2)
+
+        bbd_open.assert_called_with() # called twice
+        bbd_close.assert_called_once_with()
+        bbd_direction.assert_called_with(1)
+ 
