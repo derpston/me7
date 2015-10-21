@@ -123,7 +123,9 @@ class TestBitBang(TestCase):
 
         value_bits = port_values[2:-1]
         reconstructed_value = int("0b" + "".join(map(lambda b: str(b), value_bits)), 2)
-        # Invert reconstructed value, we're supposed to transmit the inverse.
+        # Invert reconstructed value, we're supposed to transmit the inverse
+        # because that's how RS232 voltage levels work:
+        # https://en.wikipedia.org/wiki/RS-232#Voltage_levels
         reconstructed_value ^= 0xff
         self.assertEqual(test_value, reconstructed_value)
 
