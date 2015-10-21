@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 class ECU:
 
     def __init__(self):
-        self.ser = pylibftdi.Device(mode='b', lazy_open=True)
+        self.port = pylibftdi.Device(mode='b', lazy_open=True)
 
     def bbang(self, bba):
         # Take the one-byte address to "bit bang" and bang the port
@@ -68,7 +68,7 @@ class ECU:
     def initialize(self, connect):
         self.connect = connect
         if self.connect == "SLOW-0x11":
-            self.ser.close()
+            self.port.close()
             time.sleep(.5)
 
             self.ecuconnect = False
@@ -78,10 +78,10 @@ class ECU:
                 # Bit bang the K-line
                 bbseq = [0x11]
                 self.bbang(bbseq)
-                self.ser.open()
-                self.ser.ftdi_fn.ftdi_set_line_property(8, 1, 0)
-                self.ser.baudrate = 10400
-                self.ser.flush()
+                self.port.open()
+                self.port.ftdi_fn.ftdi_set_line_property(8, 1, 0)
+                self.port.baudrate = 10400
+                self.port.flush()
 
                 # Wait for ECU response to bit bang
                 waithex = [0x55, 0xef, 0x8f, 1]
@@ -133,18 +133,18 @@ class ECU:
         self.sendlist = sendlist
         # Puts every byte in the sendlist out the serial port
         for i in self.sendlist:
-            self.ser.write(chr(i))
+            self.port.write(chr(i))
 
     def recvraw(self, bytes):
         self.bytes = bytes
-        recvdata = self.ser.read(self.bytes)
+        recvdata = self.port.read(self.bytes)
         return recvdata
 
     def recv(self, bytes):
         self.bytes = bytes
         isread = False
         while isread == False:
-            recvbyte = self.ser.read(self.bytes)
+            recvbyte = self.port.read(self.bytes)
             if recvbyte != "":
                 recvdata = recvbyte
                 isread = True
@@ -241,7 +241,7 @@ class ECU:
         sendlist = startdiagnosticsession + setbaud + bpsout
         self.sendcommand(sendlist)
         response = self.getresponse()
-        self.ser.baudrate = self.bps
+        self.port.baudrate = self.bps
         time.sleep(1)
         return response
 
