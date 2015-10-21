@@ -48,6 +48,11 @@ class ECU:
         We do this by bit-banging a value, with some header/footer bits,
         to the serial port manually. We're aiming for 5 baud."""
 
+        # For the bit widths and timings, see this diagram:
+        # https://en.wikipedia.org/wiki/Asynchronous_serial_communication#/media/File:Puerto_serie_Rs232.png
+        # The configuration we're emulating here is 8 bits, no parity, one
+        # stop bit. (8N1)
+
         # TODO fix this stupid encapsulation
         value = value[0]
 
@@ -56,11 +61,11 @@ class ECU:
         port.open()
         port.direction = 0x01
         
-        # High for a half second.
+        # High for a half second to make the serial line "idle"
         port.port = 1
         time.sleep(.5)
 
-        # Low for one bit-width
+        # Low for one bit-width, the stop bit.
         port.port = 0
         time.sleep(.2)
 
@@ -69,7 +74,8 @@ class ECU:
             port.port = (value >> i) & 1
             time.sleep(.2)
 
-        # High, and close port.
+        # Bring the line high to go back to an idle state, and close
+        # the port.
         port.port = 1
         port.close()
 
