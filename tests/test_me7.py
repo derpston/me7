@@ -41,8 +41,7 @@ class TestCommandValidate(TestCase):
             self.ecu = me7.ECU()
 
     def test_commandValidate(self):
-        buf = "\x00"
-        with mock.patch("me7.ECU.recv", return_value = buf):
+        with mock.patch("me7.ECU.recv", return_value = "\x00"):
             self.assertTrue(self.ecu._validateCommand([0x00]))
     
         with mock.patch("me7.ECU.recv", return_value = "\x00"):
