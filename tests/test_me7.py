@@ -1,4 +1,5 @@
 from unittest import TestCase
+import mock
 import me7
 
 
@@ -14,7 +15,8 @@ class TestChecksum(TestCase):
     """A KWP2000 checksum is the 8 bit sum of all bytes."""
 
     def setUp(self):
-        self.ecu = me7.ECU()
+        with mock.patch("pylibftdi.Device"):
+            self.ecu = me7.ECU()
 
     def test_checksum_empty(self):
         self.assertEqual(self.ecu.checksum([]), 0)
