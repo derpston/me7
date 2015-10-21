@@ -8,3 +8,24 @@ class TestECUExists(TestCase):
 
     def test_ecu_class_exists(self):
         self.assertTrue(getattr(me7, 'ECU'))
+
+
+class TestChecksum(TestCase):
+    """A KWP2000 checksum is the 8 bit sum of all bytes."""
+
+    def setUp(self):
+        self.ecu = me7.ECU()
+
+    def test_checksum_empty(self):
+        self.assertEqual(self.ecu.checksum([]), 0)
+    
+    def test_checksum_basic(self):
+        self.assertEqual(self.ecu.checksum([0x01]), 1)
+        self.assertEqual(self.ecu.checksum([0x01, 0x00]), 1)
+        self.assertEqual(self.ecu.checksum([0x01, 0x01]), 2)
+
+    def test_checksum_wrap(self):
+        self.assertEqual(self.ecu.checksum([0xff]), 0)
+        self.assertEqual(self.ecu.checksum([0xfe]), 0xfe)
+        self.assertEqual(self.ecu.checksum([0xfe, 0x01]), 0)
+        self.assertEqual(self.ecu.checksum([0xdd, 0xdd]), 186)
