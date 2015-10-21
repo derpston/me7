@@ -129,11 +129,9 @@ class ECU:
                 break
         return [isfound, foundlist, capturebytes]
 
-    def send(self, sendlist):
-        self.sendlist = sendlist
-        # Puts every byte in the sendlist out the serial port
-        for i in self.sendlist:
-            self.port.write(chr(i))
+    def send(self, buf):
+        """Writes the list of bytes in `buf` to the serial port."""
+        self.port.write("".join([chr(b) for b in buf]))
 
     def recvraw(self, bytes):
         self.bytes = bytes
