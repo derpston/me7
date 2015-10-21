@@ -1,3 +1,4 @@
 test:
   override:
+    - sudo apt-get install libftdi1
     - tox
