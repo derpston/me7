@@ -37,6 +37,9 @@ import pylibftdi
 
 logger = logging.getLogger(__name__)
 
+# Commands
+StopCommunicating = 0x82
+
 class ECU:
     connected = False
 
@@ -86,9 +89,10 @@ class ECU:
         The default is SLOW-0x11"""
         logging.debug("Attempting ECU connect with method %s" % method)
 
-        # If we're already connected, do nothing.
+        # If we're already connected, raise an exception.
         if self.connected:
-            return True
+            raise RuntimeError("Already connected, call .close()"\
+            " before reconnecting.")
 
         if method == "SLOW-0x11":
             # Bit bang the K-line to signal the ECU that we're connecting.
@@ -225,11 +229,14 @@ class ECU:
         return response
 
     def close(self):
-        # KWP2000 command to tell the ECU that the communications is finished
-        stopcommunication = [0x82]
-        self.sendCommand(stopcommunication)
-        response = self.getresponse()
-        return response
+        """Disconnects from the ECU."""
+        if self.connected:
+            self.sendCommand([StopCommunicating])
+            response = self.getresponse()
+            self.port.close()
+            return response
+        else:
+            raise RuntimeError("Already disconnected.")
 
     def startdiagsession(self, bps):
         # KWP2000 setup that sets the baud for the logging session

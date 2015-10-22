@@ -150,6 +150,10 @@ class TestOpen(TestCase):
         with self.assertRaises(RuntimeError):
             self.ecu.open("not a valid connection method")
 
+    def test_bad_order(self):
+        with self.assertRaises(RuntimeError):
+            self.ecu.open("not a valid connection method")
+
     @mock.patch("me7.ECU.bitbang")
     @mock.patch("me7.ECU.waitfor", side_effect=[[True], [True]])
     @mock.patch("time.sleep")
