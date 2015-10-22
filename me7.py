@@ -304,7 +304,8 @@ class ECU:
         return response
 
     def setuplogrecord(self, addrs):
-        """Configures the ECU to prepare to send a list of memory addresses"""
+        """Configures the ECU with a list of memory addresses, whose values
+        will be read later with getlogrecord"""
         self.sendCommand([0xb7, 0x03] + addrs)
         return self.getresponse()
 
