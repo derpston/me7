@@ -166,3 +166,29 @@ class TestOpen(TestCase):
         self.assertEqual(self.ecu.port.baudrate, 10400)
         self.ecu.port.flush.assert_called_once_with()
     
+
+class TestSetupLogRecord(TestCase):
+    """Tells the ECU which memory addresses you want to read later."""
+
+    @mock.patch("pylibftdi.Device")
+    def setUp(self, device):
+        self.ecu = me7.ECU()
+
+    @mock.patch("me7.ECU.sendCommand")
+    @mock.patch("me7.ECU.getresponse")
+    def test_connect(self, getresponse, sendCommand):
+        self.ecu.setuplogrecord([0x00, 0x00, 0x00])
+        sendCommand.assert_called_with([0xb7, 0x03, 0x00, 0x00, 0x00])
+
+class TestGetLogRecord(TestCase):
+    """Requests values for all log records used previously in setuplogrecord"""
+
+    @mock.patch("pylibftdi.Device")
+    def setUp(self, device):
+        self.ecu = me7.ECU()
+
+    @mock.patch("me7.ECU.sendCommand")
+    @mock.patch("me7.ECU.getresponse")
+    def test_connect(self, getresponse, sendCommand):
+        self.ecu.getlogrecord()
+        sendCommand.assert_called_with([0xb7])
