@@ -303,20 +303,13 @@ class ECU:
         response = self.getresponse()
         return response
 
-    def setuplogrecord(self, logline):
-        # KWP2000 command to access timing parameters
-        self.logline = logline
-        response = []
-        sendlist = [0xb7]                           # is 0xB7 the "locator?"
-        sendlist = sendlist + [0x03]           # Number of bytes per field ?
-        sendlist = sendlist + self.logline
-        self.sendCommand(sendlist)
-        response = self.getresponse()
-        return response
+    def setuplogrecord(self, addrs):
+        """Configures the ECU to prepare to send a list of memory addresses"""
+        self.sendCommand([0xb7, 0x03] + addrs)
+        return self.getresponse()
 
     def getlogrecord(self):
-        # Command to request a logging record
-        gr = [0xb7]
-        self.sendCommand(gr)
-        response = self.getresponse()
-        return response
+        """Returns a list of bytes representing the values of the memory
+        addresses previously added to the logging list."""
+        self.sendCommand([0xb7])
+        return self.getresponse()
