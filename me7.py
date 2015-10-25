@@ -126,6 +126,8 @@ class Variable(object):
 class ECU:
     connected = False
 
+    timeout = 10
+
     def __init__(self):
         self.port = pylibftdi.Device(mode='b', lazy_open=True)
         self._logged_variables = []
@@ -245,21 +247,37 @@ class ECU:
 
     def recvraw(self, bytes):
         self.bytes = bytes
+        read_start_ts = time.time()
         while True:
             recvdata = self.port.read(self.bytes)
             if len(recvdata) > 0:
                 break
+            if time.time() - read_start_ts > self.timeout:
+                self.connected = False
+                try:
+                    self.port.close()
+                except:
+                    pass
+                raise RuntimeError("Timeout: a read took more than %d seconds.", self.timeout)
 
         return recvdata
 
     def recv(self, bytes):
         self.bytes = bytes
         isread = False
+        read_start_ts = time.time()
         while isread == False:
             recvbyte = self.port.read(self.bytes)
             if len(recvbyte) > 0:
                 recvdata = recvbyte
                 isread = True
+            if time.time() - read_start_ts > self.timeout:
+                self.connected = False
+                try:
+                    self.port.close()
+                except:
+                    pass
+                raise RuntimeError("Timeout: a read took more than %d seconds.", self.timeout)
         return recvdata
 
     def sendCommand(self, buf):
