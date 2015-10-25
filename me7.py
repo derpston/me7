@@ -31,6 +31,7 @@ trichard3000
 from __future__ import print_function, division
 import time
 import logging
+import struct
 
 # 3rd party
 import pylibftdi 
@@ -306,7 +307,19 @@ class ECU:
     def setuplogrecord(self, addrs):
         """Configures the ECU with a list of memory addresses, whose values
         will be read later with getlogrecord"""
-        self.sendCommand([0xb7, 0x03] + addrs)
+
+        # Save the addresses for use by getlogrecord later.
+        self._logged_addrs = addrs
+
+        # TODO Move and name command/config bytes
+        cmd = [0xb7, 0x03]
+
+        for addr in addrs:
+            # Convert the integer address value to a list of three bytes and
+            # add it to the pending command.
+            cmd.extend([ord(b) for b in struct.pack(">L", addr)[1:]])
+
+        self.sendCommand(cmd)
         return self.getresponse()
 
     def getlogrecord(self):
