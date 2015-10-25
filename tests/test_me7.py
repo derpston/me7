@@ -176,11 +176,17 @@ class TestSetupLogRecord(TestCase):
 
     @mock.patch("me7.ECU.sendCommand")
     @mock.patch("me7.ECU.getresponse")
-    def test_setuplogrecord(self, getresponse, sendCommand):
-        self.ecu.setuplogrecord([0x00])
+    def test_preparelogvariables(self, getresponse, sendCommand):
+        var1 = me7.Variable("foo", 0x00)
+        self.ecu.prepareLogVariables(var1)
         sendCommand.assert_called_with([0xb7, 0x03, 0x00, 0x00, 0x00])
-        self.ecu.setuplogrecord([0x010203])
+
+        var2 = me7.Variable("foo", 0x010203)
+        self.ecu.prepareLogVariables(var2)
         sendCommand.assert_called_with([0xb7, 0x03, 0x01, 0x02, 0x03])
+        
+        self.ecu.prepareLogVariables(var1, var2)
+        sendCommand.assert_called_with([0xb7, 0x03, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03])
 
 class TestGetLogRecord(TestCase):
     """Requests values for all log records used previously in setuplogrecord"""

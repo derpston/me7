@@ -41,6 +41,7 @@ logger = logging.getLogger(__name__)
 # Commands
 StopCommunicating = 0x82
 WriteMemoryByAddress = 0x3d
+SetupLogging = 0xb7
 
 class Variable(object):
     #https://docs.python.org/2/library/struct.html#format-characters
@@ -365,20 +366,30 @@ class ECU:
         response = self.getresponse()
         return response
 
-    def setuplogrecord(self, addrs):
+    def prepareLogVariables(self, *variables):
         """Configures the ECU with a list of memory addresses, whose values
         will be read later with getlogrecord"""
 
-        # Save the addresses for use by getlogrecord later.
-        self._logged_addrs = addrs
 
-        # TODO Move and name command/config bytes
-        cmd = [0xb7, 0x03]
+        # 0x03 probably means to expect three byte addresses. Untested.
+        cmd = [SetupLogging, 0x03]
 
-        for addr in addrs:
+        for var in variables:
             # Convert the integer address value to a list of three bytes and
             # add it to the pending command.
-            cmd.extend(self._splitAddr(addr))
+            addr = self._splitAddr(var.addr)
+
+            # Telling the ECU we want to read two bytes is done by adding
+            # 0x40 to the most significant byte.
+            if var.size == 2:
+                addr[0] += 0x40 
+
+            # Add the address to the command.
+            cmd.extend(addr)
+
+        # Save a copy of the variable list, which will be used later by
+        # getLogRecord to parse the results.
+        self._logged_variables = variables
 
         self.sendCommand(cmd)
         return self.getresponse()
