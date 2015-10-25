@@ -194,3 +194,19 @@ class TestGetLogRecord(TestCase):
     def test_connect(self, getresponse, sendCommand):
         self.ecu.getlogrecord()
         sendCommand.assert_called_with([0xb7])
+
+
+class TestWriteMemByAddr(TestCase):
+    """Writes arbitrary data to memory."""
+
+    @mock.patch("pylibftdi.Device")
+    def setUp(self, device):
+        self.ecu = me7.ECU()
+
+    @mock.patch("me7.ECU.sendCommand")
+    @mock.patch("me7.ECU.getresponse")
+    @mock.patch("me7.logger")
+    def test_writemembyaddr(self, logger, getresponse, sendCommand):
+        self.ecu.writemembyaddr([0x00, 0xe2, 0x28, 0x04, 0x00, 0x3a, 0xe1, 0x00])
+        sendCommand.assert_called_with([0x3d, 0x00, 0xe2, 0x28, 0x04, 0x00, 0x3a, 0xe1, 0x00])
+
