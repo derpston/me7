@@ -42,6 +42,67 @@ logger = logging.getLogger(__name__)
 StopCommunicating = 0x82
 WriteMemoryByAddress = 0x3d
 
+class Variable(object):
+    #https://docs.python.org/2/library/struct.html#format-characters
+    _struct_sizes = {1: "B", 2: "H"}
+
+    def __init__(self, name, addr, size=1, unit="?", factor=1, bitmask=None,
+        offset=0, signed=False, inverse=False):
+        
+        if size not in [1, 2]:
+            raise ValueError("Unsupported variable size (%d)", size)
+
+        if bitmask is None:
+            bitmask = (1 << (size * 8)) - 1
+
+        self.name = name
+        self.addr = addr
+        self.size = size
+        self.bitmask = bitmask
+        self.unit = unit
+        self.factor = factor
+        self.offset = offset
+        self.signed = signed
+        self.inverse = inverse
+
+
+    def convert(self, raw_value):
+        if len(raw_value) != self.size:
+            raise ValueError("Wrong number of bytes (%d) for a variable"\
+                " of size %d", len(raw_value), self.size)
+
+        # We could consider the signed/unsigned type here, but because we
+        # have to do a bitwise operation with the bitmask later the
+        # conversion to signed is done later.
+        value = struct.unpack(">" + self._struct_sizes[self.size], 
+            self._bytestr(raw_value))[0]
+
+        return self._convert(value)
+
+    def _convert(self, value):
+        """Returns `value` after applying the bitmask"""
+    
+        value &= self.bitmask
+
+        if self.signed:
+            fmt = ">" + self._struct_sizes[self.size]
+            # Convert the unsigned value into a signed value by byte-packing
+            # it as unsigned, and unpacking it as signed.
+            # The struct format characters for signed are lowercase, so just
+            # use .lower() to convert the format string.
+            value = struct.unpack(fmt.lower(), struct.pack(fmt, value))[0]
+        
+        if self.inverse:
+            value = self.factor / (value - self.offset)
+        else:
+            value = self.factor * value - self.offset
+
+        return value
+
+    def _bytestr(self, values):
+        """Convert a list of ints representing bytes to a string."""
+        return "".join([chr(v) for v in values])
+
 class ECU:
     connected = False
 
