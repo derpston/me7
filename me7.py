@@ -329,5 +329,5 @@ class ECU:
     def _splitAddr(self, addr):
         """Takes an integer memory address in `addr`, assumes a maximum
         three byte length, and returns a list of three ints corresponding
-        to these three bytes, MSB first."""
+        to these three bytes, most significant first."""
         return [ord(b) for b in struct.pack(">L", addr)[1:]]
