@@ -119,7 +119,8 @@ class Variable(object):
 
     def _bytestr(self, values):
         """Convert a list of ints representing bytes to a string."""
-        return "".join([chr(v) for v in values])
+        return bytes(values) #py3
+        #return "".join([chr(v) for v in values]) #py2 TODO
 
 
 class ECU:
@@ -170,7 +171,7 @@ class ECU:
         """Connect to the ECU. Returns a boolean indicating success. Valid 
         values for the `method` parameter are: "SLOW-0x11"
         The default is SLOW-0x11"""
-        logging.debug("Attempting ECU connect with method %s" % method)
+        logger.debug("Attempting ECU connect with method %s" % method)
 
         # If we're already connected, raise an exception.
         if self.connected:
@@ -202,6 +203,8 @@ class ECU:
             response = self.waitfor(waithex)
             if response[0] == True:
                 self.connected = True
+            else:
+                logger.debug("Failed to connect to ECU, response was %s", repr(response))
             
             return self.connected
         else:
@@ -242,7 +245,11 @@ class ECU:
 
     def recvraw(self, bytes):
         self.bytes = bytes
-        recvdata = self.port.read(self.bytes)
+        while True:
+            recvdata = self.port.read(self.bytes)
+            if len(recvdata) > 0:
+                break
+
         return recvdata
 
     def recv(self, bytes):
@@ -250,7 +257,7 @@ class ECU:
         isread = False
         while isread == False:
             recvbyte = self.port.read(self.bytes)
-            if recvbyte != "":
+            if len(recvbyte) > 0:
                 recvdata = recvbyte
                 isread = True
         return recvdata
@@ -261,6 +268,7 @@ class ECU:
         validateCommand was satisfied with the response from the ECU."""
         sendbuf = [len(buf)]
         sendbuf.extend(buf)
+        # TODO python 2/3 byte handling issue here, or debug from here.
         sendbuf.append(self.checksum(sendbuf))
 
         self.send(sendbuf)
@@ -451,4 +459,5 @@ class ECU:
         """Takes an integer memory address in `addr`, assumes a maximum
         three byte length, and returns a list of three ints corresponding
         to these three bytes, most significant first."""
-        return [ord(b) for b in struct.pack(">L", addr)[1:]]
+        #return [ord(b) for b in bytes(struct.pack(">L", addr)[1:])] # py2
+        return list(bytes(struct.pack(">L", addr)[1:])) # py3
