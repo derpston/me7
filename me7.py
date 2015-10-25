@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 # Commands
 StopCommunicating = 0x82
+WriteMemoryByAddress = 0x3d
 
 class ECU:
     connected = False
@@ -286,15 +287,12 @@ class ECU:
         logger.debug("readmembyaddr() response: " + response)
         return response
 
-    def writemembyaddr(self, writevals):
-        # Function to write to an area of ECU memory.
-        self.writevals = writevals
-        wrmembyaddr = [0x3D]
-        sendlist = wrmembyaddr + self.writevals
-        logger.debug("writemembyaddr() sendlist: %s", sendlist)
-        self.sendCommand(sendlist)
+    def writemembyaddr(self, addr, value):
+        """Writes `value` to memory at address `addr`. `value` is expected
+        to be a list of ints, each representing one byte."""
+        cmd = [WriteMemoryByAddress] + self._splitAddr(addr) + [len(value)] + value
+        self.sendCommand(cmd)
         response = self.getresponse()
-        logger.debug("writemembyaddr() response: %s", response)
         return response
 
     def testerpresent(self):
@@ -317,13 +315,19 @@ class ECU:
         for addr in addrs:
             # Convert the integer address value to a list of three bytes and
             # add it to the pending command.
-            cmd.extend([ord(b) for b in struct.pack(">L", addr)[1:]])
+            cmd.extend(self._splitAddr(addr))
 
         self.sendCommand(cmd)
         return self.getresponse()
-
+    
     def getlogrecord(self):
         """Returns a list of bytes representing the values of the memory
         addresses previously added to the logging list."""
         self.sendCommand([0xb7])
         return self.getresponse()
+    
+    def _splitAddr(self, addr):
+        """Takes an integer memory address in `addr`, assumes a maximum
+        three byte length, and returns a list of three ints corresponding
+        to these three bytes, MSB first."""
+        return [ord(b) for b in struct.pack(">L", addr)[1:]]

@@ -207,6 +207,16 @@ class TestWriteMemByAddr(TestCase):
     @mock.patch("me7.ECU.getresponse")
     @mock.patch("me7.logger")
     def test_writemembyaddr(self, logger, getresponse, sendCommand):
-        self.ecu.writemembyaddr([0x00, 0xe2, 0x28, 0x04, 0x00, 0x3a, 0xe1, 0x00])
+        self.ecu.writemembyaddr(0x00e228, [0x00, 0x3a, 0xe1, 0x00])
         sendCommand.assert_called_with([0x3d, 0x00, 0xe2, 0x28, 0x04, 0x00, 0x3a, 0xe1, 0x00])
+
+class TestSplitBytes(TestCase):
+    @mock.patch("pylibftdi.Device")
+    def setUp(self, device):
+        self.ecu = me7.ECU()
+
+    def test_splitbytes(self):
+        self.assertEqual(self.ecu._splitAddr(0x123456), [0x12, 0x34, 0x56])
+        self.assertEqual(self.ecu._splitAddr(0x000056), [0x00, 0x00, 0x56])
+        self.assertEqual(self.ecu._splitAddr(0x56), [0x00, 0x00, 0x56])
 
