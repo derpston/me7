@@ -32,6 +32,7 @@ from __future__ import print_function, division
 import time
 import logging
 import struct
+import copy
 
 # 3rd party
 import pylibftdi 
@@ -66,6 +67,7 @@ class Variable(object):
         self.signed = signed
         self.inverse = inverse
         self.comment = comment
+
         self.raw_value = None
 
     def set(self, raw_value):
@@ -125,6 +127,7 @@ class ECU:
 
     def __init__(self):
         self.port = pylibftdi.Device(mode='b', lazy_open=True)
+        self._logged_variables = []
 
     def bitbang(self, value):
         """Wake up the ECU and tell it we're going to start talking to it.
@@ -409,6 +412,34 @@ class ECU:
 
         self.sendCommand(cmd)
         return self.getresponse()
+
+    def getLogValues(self):
+        """Fetches a value for each configured variable from the ECU and
+        returns a dict of Variables, keyed by the variable name."""
+        raw_result = self.getlogrecord()
+
+        # Strip header and checksum.
+        length = raw_result[0]
+        # TODO Find out why this always seems to be 0xf7. Is it just
+        # indicating success, or something else?
+        unknown = raw_result[1]
+        checksum = raw_result[-1]
+        result = raw_result[2:-1]
+
+        response = {}
+        index = 0
+        for var in self._logged_variables:
+            # Slice out the bytes relevant to this variable.
+            raw_bytes = result[index:index + var.size]
+
+            # Make a copy of the variable, give it the raw bytes, and add
+            # it to the response dict.
+            copied_var = copy.copy(var)
+            copied_var.set(raw_bytes)
+            response[copied_var.name] = copied_var
+
+            index += var.size
+        return response
     
     def getlogrecord(self):
         """Returns a list of bytes representing the values of the memory

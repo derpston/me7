@@ -305,4 +305,16 @@ class TestVariable(TestCase):
         with self.assertRaises(ValueError):
             var.set([0x00, 0x00, 0x00, 0x00])
             var.set([])
-         
+
+class TestGetLogValues(TestCase):
+    @mock.patch("pylibftdi.Device")
+    def setUp(self, device):
+        self.ecu = me7.ECU()
+
+    @mock.patch("me7.ECU.getlogrecord")
+    def test_getlogvalues(self, getlogrecord):
+        self.ecu._logged_variables.append(me7.Variable("foo", 0x00))
+        getlogrecord.return_value = [0x00, 0x00, 0x01, 0x00]
+        variables = self.ecu.getLogValues()
+        self.assertEqual(variables['foo'].get(), 1)
+ 
