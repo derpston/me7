@@ -295,6 +295,8 @@ class ECU:
         logger.debug(gr)
         logger.debug("GR: " + hex(ord(checkbyte)) +
                      "<-->" + hex(self.checksum(gr)))
+        # TODO Enforce the bloody checksum
+        # TODO Don't return the checksum with the response
         return (gr + [ord(checkbyte)])
 
     def readecuid(self, paramdef):
