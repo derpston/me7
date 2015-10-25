@@ -229,67 +229,80 @@ class TestSplitBytes(TestCase):
 class TestVariable(TestCase):
     def test_factor_offset(self):
         var = me7.Variable("foo", 0x00)
-        self.assertEqual(var._convert(1), 1)
+        self.assertEqual(var._convert([1]), 1)
         
         var = me7.Variable("foo", 0x00, factor=2)
-        self.assertEqual(var._convert(1), 2)
+        self.assertEqual(var._convert([1]), 2)
 
         var = me7.Variable("foo", 0x00, offset=50)
-        self.assertEqual(var._convert(1), -49)
+        self.assertEqual(var._convert([1]), -49)
 
         var = me7.Variable("foo", 0x00, factor=2, offset=10)
-        self.assertEqual(var._convert(1), -8)
+        self.assertEqual(var._convert([1]), -8)
         
         var = me7.Variable("foo", 0x00, factor=2, offset=-10)
-        self.assertEqual(var._convert(1), 12)
+        self.assertEqual(var._convert([1]), 12)
         
         var = me7.Variable("foo", 0x00, factor=2, offset=-10)
-        self.assertEqual(var._convert(5), 20)
+        self.assertEqual(var._convert([5]), 20)
         
     def test_bitmask(self):
         var = me7.Variable("foo", 0x00, bitmask=0)
-        self.assertEqual(var._convert(0xff), 0)
+        self.assertEqual(var._convert([0xff]), 0)
         
         var = me7.Variable("foo", 0x00, bitmask=1)
-        self.assertEqual(var._convert(0xff), 1)
+        self.assertEqual(var._convert([0xff]), 1)
         
         var = me7.Variable("foo", 0x00, bitmask=0b10)
-        self.assertEqual(var._convert(0xff), 2)
+        self.assertEqual(var._convert([0xff]), 2)
         
         var = me7.Variable("foo", 0x00, bitmask=0b1000)
-        self.assertEqual(var._convert(0xff), 8)
+        self.assertEqual(var._convert([0xff]), 8)
         
         var = me7.Variable("foo", 0x00, size=2)
-        self.assertEqual(var._convert(0xff00), 0xff00)
+        self.assertEqual(var._convert([0xff, 0x00]), 0xff00)
 
         var = me7.Variable("foo", 0x00, bitmask=0b1000, size=2)
-        self.assertEqual(var._convert(0xff00), 0)
+        self.assertEqual(var._convert([0xff, 0x00]), 0)
         
         var = me7.Variable("foo", 0x00, bitmask=1 << 12, size=2)
-        self.assertEqual(var._convert(0xff00), 4096)
+        self.assertEqual(var._convert([0xff, 0x00]), 4096)
 
     def test_convert(self):
         var = me7.Variable("foo", 0x00)
-        self.assertEqual(var.convert([0x00]), 0)
+        self.assertEqual(var._convert([0x00]), 0)
         
         var = me7.Variable("foo", 0x00)
-        self.assertEqual(var.convert([0x01]), 1)
+        self.assertEqual(var._convert([0x01]), 1)
 
         var = me7.Variable("foo", 0x00, size=2)
-        self.assertEqual(var.convert([0x00, 0x01]), 1)
+        self.assertEqual(var._convert([0x00, 0x01]), 1)
         
         var = me7.Variable("foo", 0x00, size=2)
-        self.assertEqual(var.convert([0x01, 0x00]), 256)
+        self.assertEqual(var._convert([0x01, 0x00]), 256)
         
         var = me7.Variable("foo", 0x00, signed=True)
-        self.assertEqual(var.convert([0x01]), 1)
+        self.assertEqual(var._convert([0x01]), 1)
        
         var = me7.Variable("foo", 0x00, signed=True)
-        self.assertEqual(var.convert([0xff]), -1)
+        self.assertEqual(var._convert([0xff]), -1)
         
         var = me7.Variable("foo", 0x00, signed=True, size=2)
-        self.assertEqual(var.convert([0xff, 0xff]), -1)
+        self.assertEqual(var._convert([0xff, 0xff]), -1)
         
         var = me7.Variable("foo", 0x00, signed=True, size=2)
-        self.assertEqual(var.convert([0xff, 0x00]), -256)
+        self.assertEqual(var._convert([0xff, 0x00]), -256)
+
+    def test_set(self):
+        var = me7.Variable("foo", 0x00)
+        var.set([0x00])
+        self.assertEqual(var.get(), 0)
+
+        var = me7.Variable("foo", 0x00)
+        self.assertEqual(var.get(), None)
         
+        var = me7.Variable("foo", 0x00)
+        with self.assertRaises(ValueError):
+            var.set([0x00, 0x00, 0x00, 0x00])
+            var.set([])
+         

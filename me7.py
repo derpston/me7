@@ -48,7 +48,7 @@ class Variable(object):
     _struct_sizes = {1: "B", 2: "H"}
 
     def __init__(self, name, addr, size=1, unit="?", factor=1, bitmask=None,
-        offset=0, signed=False, inverse=False):
+        offset=0, signed=False, inverse=False, comment=None):
         
         if size not in [1, 2]:
             raise ValueError("Unsupported variable size (%d)", size)
@@ -65,25 +65,39 @@ class Variable(object):
         self.offset = offset
         self.signed = signed
         self.inverse = inverse
+        self.comment = comment
+        self.raw_value = None
 
-
-    def convert(self, raw_value):
+    def set(self, raw_value):
         if len(raw_value) != self.size:
             raise ValueError("Wrong number of bytes (%d) for a variable"\
                 " of size %d", len(raw_value), self.size)
 
-        # Convert from a list of bytes to an unsigned int.
-        # We could consider the signed/unsigned type here, but because we
-        # have to do a bitwise operation with the bitmask later the
-        # conversion to signed has to be done later.
+        self.raw_value = raw_value
+
+    def get(self):
+        if self.raw_value is None:
+            return None
+        else:
+            return self._convert(self.raw_value)
+
+    def __repr__(self):
+        return "<me7.Variable: %s = %s %s (%s)>" % (
+                self.name
+            ,   self.get()
+            ,   self.unit
+            ,   self.comment
+            )
+
+    def _convert(self, raw_value):
+        """Convert from a list of bytes to the final signed/unsigned value."""
+        # We could consider the signed/unsigned type here, but we have to do
+        # the signed/unsigned conversion after the bitmask application so we
+        # just assume unsigned for now.
         value = struct.unpack(">" + self._struct_sizes[self.size], 
             self._bytestr(raw_value))[0]
 
-        return self._convert(value)
-
-    def _convert(self, value):
-        """Returns `value` after applying the bitmask"""
-    
+        # Apply bitmask.
         value &= self.bitmask
 
         if self.signed:
