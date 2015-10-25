@@ -291,10 +291,10 @@ class ECU:
         self.writevals = writevals
         wrmembyaddr = [0x3D]
         sendlist = wrmembyaddr + self.writevals
-        logger.debug("writemembyaddr() sendlist: " + sendlist)
+        logger.debug("writemembyaddr() sendlist: %s", sendlist)
         self.sendCommand(sendlist)
         response = self.getresponse()
-        logger.debug("writemembyaddr() response: " + response)
+        logger.debug("writemembyaddr() response: %s", response)
         return response
 
     def testerpresent(self):
