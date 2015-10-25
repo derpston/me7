@@ -71,9 +71,10 @@ class Variable(object):
             raise ValueError("Wrong number of bytes (%d) for a variable"\
                 " of size %d", len(raw_value), self.size)
 
+        # Convert from a list of bytes to an unsigned int.
         # We could consider the signed/unsigned type here, but because we
         # have to do a bitwise operation with the bitmask later the
-        # conversion to signed is done later.
+        # conversion to signed has to be done later.
         value = struct.unpack(">" + self._struct_sizes[self.size], 
             self._bytestr(raw_value))[0]
 
@@ -102,6 +103,7 @@ class Variable(object):
     def _bytestr(self, values):
         """Convert a list of ints representing bytes to a string."""
         return "".join([chr(v) for v in values])
+
 
 class ECU:
     connected = False
